@@ -75,7 +75,7 @@ extern RouteManagerDialog* pRouteManagerDialog;
 extern RoutePropDlgImpl* pRoutePropDialog;
 extern bool g_bShowTrue, g_bShowMag;
 extern ocpnStyle::StyleManager* g_StyleManager;
-
+extern PlugInManager *g_pi_manager;
 extern MyFrame* gFrame;
 extern OCPNPlatform* g_Platform;
 extern wxString g_default_wp_icon;
@@ -1718,10 +1718,16 @@ void MarkInfoDlg::ValidateMark(void) {
 }
 
 bool MarkInfoDlg::SaveChanges() {
+	bool b_newWaypoint = false;
   if (m_pRoutePoint) {
     if (m_pRoutePoint->m_bIsInLayer) return true;
 
     // Get User input Text Fields
+	if (m_pRoutePoint->GetName().Length() == 0) {
+		// Name is empty upon initial creation either from
+		// Dropping a Mark or Add New Waypoint
+		b_newWaypoint = true;
+	}
     m_pRoutePoint->SetName(m_textName->GetValue());
     m_pRoutePoint->SetWaypointArrivalRadius(m_textArrivalRadius->GetValue());
     m_pRoutePoint->SetScaMin(m_textScaMin->GetValue());
@@ -1814,6 +1820,19 @@ bool MarkInfoDlg::SaveChanges() {
       }
     } else
       pConfig->UpdateWayPoint(m_pRoutePoint);
+	// Generate a notification but only if in our guesstimation
+	// it is a new user-entered waypoint or a dropped waypoint that is given a name
+	if (b_newWaypoint) {
+		wxJSONValue v;
+		v[_T("Name")] = m_pRoutePoint->GetName();
+		v[_T("GUID")] = m_pRoutePoint->m_GUID;
+		v[_T("Time")] = m_pRoutePoint->GetCreateTime().ToUTC().FormatISOCombined();
+		v[_T("Latitude")] = m_pRoutePoint->GetLatitude();
+		v[_T("Longitude")] = m_pRoutePoint->GetLongitude();
+		wxString msg_id(_T("OCPN_WPT_CREATED"));
+		g_pi_manager->SendJSONMessageToAllPlugins(msg_id, v);
+	}
+
     // No general settings need be saved pConfig->UpdateSettings();
   }
   // gFrame->GetFocusCanvas()->Refresh(false);

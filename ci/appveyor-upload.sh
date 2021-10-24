@@ -1,6 +1,6 @@
 #!/bin/sh
 
-REPO=${CLOUDSMITH_REPO:-"david-register/opencpn-unstable"}
+REPO=${CLOUDSMITH_REPO:-"steven-adler/opencpn5-5"}
 
 if [ -z "$CLOUDSMITH_API_KEY" ]; then
     echo 'Cannot deploy to cloudsmith: missing $CLOUDSMITH_API_KEY'
