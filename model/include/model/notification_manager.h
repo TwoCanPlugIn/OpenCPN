@@ -30,6 +30,10 @@
 #include "observable_evtvar.h"
 #include "comm_appmsg.h"
 
+#include "model/alarm_database.h"
+// BUG BUG Declared in Base Platform. Is that the appropriate place ?
+extern AlarmDatabase* alarmDatabase;
+
 class NotificationMsg : public AppMsg {
 public:
   NotificationMsg() : AppMsg(AppMsg::Type::CustomMsg) {}

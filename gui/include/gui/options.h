@@ -222,7 +222,9 @@ enum {
   ID_BUTTONMIGRATE,
   ID_TIMEZONE_UTC,
   ID_TIMEZONE_LOCAL_TIME,
-  ID_TENHZCHECKBOX
+  ID_TENHZCHECKBOX,
+  ID_ALARMDELETE,
+  ID_ALARMCLEAR
 };
 
 /* Define an int bit field for dialog return value
@@ -384,6 +386,9 @@ public:
   void SetForceNewToolbarOnCancel(bool val) {
     m_bForceNewToolbaronCancel = val;
   }
+
+  void OnButtonDeleteAlarm(wxCommandEvent &event);
+  void OnButtonClearAlarms(wxCommandEvent &event);
 
   wxArrayString *GetSerialArray() { return m_pSerialArray; }
 
@@ -651,6 +656,8 @@ private:
   void CreatePanel_Units(size_t parent, int border_size,
                          int group_item_spacing);
   void CreatePanel_Sounds(size_t parent, int border_size,
+                          int group_item_spacing);
+  void CreatePanel_Alarms(size_t parent, int border_size,
                           int group_item_spacing);
   void CreatePanel_Advanced(size_t parent, int border_size,
                             int group_item_spacing);

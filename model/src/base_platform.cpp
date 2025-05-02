@@ -62,6 +62,9 @@
 #include "model/ocpn_utils.h"
 #include "ocpn_plugin.h"
 
+#include "model/alarm_database.h"
+AlarmDatabase* alarmDatabase;
+
 #ifdef __ANDROID__
 #include <QDebug>
 #include "androidUTIL.h"
@@ -694,6 +697,10 @@ bool BasePlatform::InitializeLogFile(void) {
     delete m_old_logger;
   }
   m_old_logger = wxLog::SetActiveTarget(logger);
+  wxString alarmDatabaseFile =
+      (GetPrivateDataDir() + wxFileName::GetPathSeparator() + "alarm.db");
+  alarmDatabase = new AlarmDatabase(alarmDatabaseFile.ToStdString());
+  alarmDatabase->CreateDatabase();
 
   return true;
 }
@@ -703,6 +710,8 @@ void AbstractPlatform::CloseLogFile(void) {
     delete wxLog::SetActiveTarget(m_old_logger);
     m_old_logger = nullptr;
   }
+
+  delete alarmDatabase;
 }
 
 wxString AbstractPlatform::GetPluginDataPath() {

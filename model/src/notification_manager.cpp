@@ -115,6 +115,12 @@ void NotificationManager::PersistNotificationAsFile(
   if (outputFile.is_open()) {
     outputFile << ss.str();
   }
+
+  // BUG BUG Piggy back off this to add the notification to the SQLite database
+  // BUG BUG Note first param is a category, unfortunately O has no concept of
+  // categories
+  alarmDatabase->AddOne(1, static_cast<int>(_notification->GetSeverity()),
+                        _notification->GetMessage());
 }
 
 NotificationSeverity NotificationManager::GetMaxSeverity() {

@@ -87,6 +87,7 @@
 #include "model/routeman.h"
 #include "model/ser_ports.h"
 #include "model/wx28compat.h"
+#include "model/alarm_database.h"
 
 #include "ais.h"
 #include "chart_ctx_factory.h"
@@ -292,6 +293,8 @@ extern MigrateAssistantDialog* g_migrateDialog;
 #endif
 
 extern wxString GetShipNameFromFile(int);
+
+extern AlarmDatabase* alarmDatabase;
 
 WX_DEFINE_ARRAY_PTR(ChartCanvas*, arrayofCanvasPtr);
 extern arrayofCanvasPtr g_canvasArray;
@@ -4999,6 +5002,64 @@ void options::OnUXAudioEnableButtonClickDSC(wxCommandEvent& event) {
   }
 }
 
+// Quick & dirty POC to display notifications that have been persisted in SQLite
+// DB BUG BUG This seems to be only called upon startup BUG BUG Perhaps refresh
+// whenever the notebook tabs are changed
+void options::CreatePanel_Alarms(size_t parent, int border_size,
+                                 int group_item_spacing) {
+  wxScrolledWindow* panelAlarms = AddPage(parent, _("Alarm History"));
+  wxBoxSizer* alarmPanelSizer = new wxBoxSizer(wxVERTICAL);
+  wxBoxSizer* alarmButtonSizer = new wxBoxSizer(wxHORIZONTAL);
+  panelAlarms->SetSizer(alarmPanelSizer);
+
+  // BUG BUG To make this accessible, either encapsulate within a class or
+  // declare it in the options
+  wxListCtrl* alarmList = new wxListCtrl(
+      panelAlarms, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_REPORT);
+
+  wxButton* deleteButton = new wxButton(panelAlarms, ID_ALARMDELETE, "Delete");
+
+  deleteButton->Connect(wxEVT_COMMAND_BUTTON_CLICKED,
+                        wxCommandEventHandler(options::OnButtonDeleteAlarm),
+                        NULL, this);
+
+  wxButton* clearButton = new wxButton(panelAlarms, ID_ALARMCLEAR, "Clear All");
+
+  clearButton->Connect(wxEVT_COMMAND_BUTTON_CLICKED,
+                       wxCommandEventHandler(options::OnButtonClearAlarms),
+                       NULL, this);
+
+  alarmPanelSizer->Add(alarmList, 1, wxALL | wxEXPAND, border_size);
+  alarmButtonSizer->Add(deleteButton, 0, wxALL, border_size);
+  alarmButtonSizer->Add(clearButton, 0, wxALL, border_size);
+  alarmPanelSizer->Add(alarmButtonSizer, 0, wxALL | wxEXPAND, border_size);
+
+  alarmList->AppendColumn("Category", wxLIST_FORMAT_LEFT, -1);
+  alarmList->AppendColumn("Severity", wxLIST_FORMAT_LEFT, -1);
+  alarmList->AppendColumn("Time", wxLIST_FORMAT_LEFT, -1);
+  alarmList->AppendColumn("Message", wxLIST_FORMAT_LEFT, -1);
+
+  std::vector<Alarm> alarms;
+  alarmDatabase->GetAll(&alarms);
+
+  for (size_t i = 0; i < alarms.size(); i++) {
+    long index = alarmList->InsertItem(i, "GPS");
+    alarmList->SetItem(index, 1, std::to_string(alarms.at(i).severity));
+    alarmList->SetItem(index, 2, alarms.at(i).activationTime);
+    alarmList->SetItem(index, 3, alarms.at(i).message);
+  }
+}
+
+void options::OnButtonDeleteAlarm(wxCommandEvent& event) {
+  // BUG BUG ToDO, Perhaps this all needs to be encapsulated in a class
+}
+
+void options::OnButtonClearAlarms(wxCommandEvent& event) {
+  // BUG BUG Need to synch the list with the DB,
+  // BUG BUG As above perhaps encapsulate all of this as a class
+  alarmDatabase->DeleteAll();
+}
+
 void options::CreatePanel_Sounds(size_t parent, int border_size,
                                  int group_item_spacing) {
   wxScrolledWindow* panelSounds = AddPage(parent, _("Sounds"));
@@ -6032,6 +6093,7 @@ void options::CreateControls(void) {
   m_pageUI = CreatePanel(UITab);
   CreatePanel_UI(m_pageUI, border_size, group_item_spacing);
   CreatePanel_Sounds(m_pageUI, border_size, group_item_spacing);
+  CreatePanel_Alarms(m_pageUI, border_size, group_item_spacing);
 
   m_pagePlugins = CreatePanel(_("Plugins"));
   itemPanelPlugins = AddPage(m_pagePlugins, _("Plugins"));
@@ -8528,6 +8590,9 @@ void options::DoOnPageChange(size_t page) {
       }
 
       m_bVisitLang = TRUE;
+
+      // BUG BUG Seems like this is where I can force an update of the alarm
+      // history when the tab is chnaged
 
       ::wxEndBusyCursor();
     }
