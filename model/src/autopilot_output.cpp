@@ -422,7 +422,7 @@ bool SendPGN129283(Routeman &routeman, AbstractCommDriver *driver) {
   SetN2kPGN129283(msg129283, 0,
                   N2kxtem_Autonomous,  // tN2kXTEMode XTEMode,
                   false,               // bool NavigationTerminated,
-                  routeman.GetCurrentXTEToActivePoint()  // double XTE
+                  routeman.GetCurrentXTEToActivePoint() * 1852.  // double XTE
   );
 
   auto dest_addr = std::make_shared<const NavAddr2000>(driver->iface, 255);
