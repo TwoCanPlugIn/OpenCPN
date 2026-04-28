@@ -1065,6 +1065,7 @@ bool NavObj_dB::LoadAllTracks() {
         new_trk->SetName(name.c_str());
         new_trk->m_TrackStartString = start_string.c_str();
         new_trk->m_TrackEndString = end_string.c_str();
+        new_trk->m_TrackDescription = description.c_str();
         new_trk->m_width = width;
         new_trk->m_style = (wxPenStyle)style;
         new_trk->m_Colour = color;
