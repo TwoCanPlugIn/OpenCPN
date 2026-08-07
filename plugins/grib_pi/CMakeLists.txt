@@ -204,13 +204,19 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang|AppleClang")
   # FIXME: Need better handling after 5.0.0
   target_compile_options(${PACKAGE_NAME} PRIVATE -Wno-format)
 endif ()
-
+# Changed to differentiate x86 and x64 builds
 if (WIN32)
   if (MSVC)
-    target_link_libraries(
-      ${PACKAGE_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/cache/buildwin/zlib1.lib"
-                              "GLU_static"
-    )
+    if (x86)
+      target_link_libraries(${PACKAGE_NAME} PRIVATE 
+          "${CMAKE_SOURCE_DIR}/cache/buildwin/zlib1.lib" "GLU_static"
+      )
+    elseif (x64)
+      find_package(ZLIB REQUIRED)
+      target_link_libraries( ${PACKAGE_NAME} PRIVATE ZLIB::ZLIB
+        "opengl32.lib" "glu32.lib"
+      )
+    endif ()
   else (MSVC)
     set(CMAKE_SHARED_LINKER_FLAGS "-L../../")
     target_link_libraries(

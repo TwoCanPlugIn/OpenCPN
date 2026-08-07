@@ -27,20 +27,34 @@ if (CMAKE_HOST_WIN32)
       IMPORTED_IMPLIB ${PROJECT_SOURCE_DIR}/cache/buildwin/libcurl.lib
       IMPORTED_LOCATION ${PROJECT_SOURCE_DIR}/cache/buildwin/libcurl.dll
   )
+  # Changed for Windows 64 bit. 
+  # This may possibly break Win32 builds as I'm not sure if we need to
+  # have different sub directories to differentiate x86 and x64 libraries with the same name
   add_library(WIN32_ZLIB1 SHARED IMPORTED)
-  set_target_properties(WIN32_ZLIB1 PROPERTIES
+   if (x86)
+    set_target_properties(WIN32_ZLIB1 PROPERTIES
       IMPORTED_IMPLIB ${PROJECT_SOURCE_DIR}/cache/buildwin/zlib1.lib
-      IMPORTED_LOCATION ${PROJECT_SOURCE_DIR}/cache/buildwin/zlib1.dll
-  )
+      IMPORTED_LOCATION ${PROJECT_SOURCE_DIR}/cache/buildwin/zlib1.dll)
+  elseif (x64)
+    set_target_properties(WIN32_ZLIB1 PROPERTIES
+      IMPORTED_IMPLIB ${PROJECT_SOURCE_DIR}/cache/buildwin/z.lib
+      IMPORTED_LOCATION ${PROJECT_SOURCE_DIR}/cache/buildwin/z.dll)
+  endif ()
   set(CURL_LIBRARIES WIN32_LIBCURL WIN32_ZLIB1)
   set(CURL_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/cache/buildwin/include)
   set(CURL_FOUND 1)
-  install(
-    FILES
-      "${CMAKE_SOURCE_DIR}/cache/buildwin/curl-ca-bundle.crt"
+  if (x86)
+    install(FILES
       "${CMAKE_SOURCE_DIR}/cache/buildwin/libeay32.dll"
       "${CMAKE_SOURCE_DIR}/cache/buildwin/ssleay32.dll"
-	    "${CMAKE_SOURCE_DIR}/cache/buildwin/libcurl.dll"
+      DESTINATION "."
+    )
+  endif ()
+   # Note the same named library is used for both x86 & x64.
+   # Assume the correct one is copied to the cache during build
+  install(FILES
+    "${CMAKE_SOURCE_DIR}/cache/buildwin/curl-ca-bundle.crt"
+	  "${CMAKE_SOURCE_DIR}/cache/buildwin/libcurl.dll"
     DESTINATION "."
   )
 

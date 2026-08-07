@@ -1544,9 +1544,15 @@ target_link_libraries(${PACKAGE_NAME} PRIVATE ocpn::s57-charts)
 add_subdirectory(libs/gui)
 target_link_libraries(${PACKAGE_NAME} PRIVATE ocpn::guilib)
 
+# Differentiate between Windows x86 and x64
 if (MSVC)
-  install(FILES "cache/buildwin/libssl-3.dll" DESTINATION ".")
-  install(FILES "cache/buildwin/libcrypto-3.dll" DESTINATION ".")
+    if (x86)
+        install(FILES "cache/buildwin/libssl-3.dll" DESTINATION ".")
+        install(FILES "cache/buildwin/libcrypto-3.dll" DESTINATION ".")
+    elseif (x64)
+        install(FILES "cache/buildwin/libssl-3-x64.dll" DESTINATION ".")
+        install(FILES "cache/buildwin/libcrypto-3-x64.dll" DESTINATION ".")
+    endif()
 endif ()
 
 message(STATUS "S57 ENC support: enabled")
@@ -2400,13 +2406,20 @@ if (WIN32 AND NOT UNIX)
     )
   endif ()
   if (BUNDLE_LIBARCHIVEDLLS)
-    file(
-      GLOB
-      libarchivedll_files
-      "${CMAKE_CURRENT_SOURCE_DIR}/cache/buildwin/archive.dll"
-      "${CMAKE_CURRENT_SOURCE_DIR}/cache/buildwin/liblzma.dll"
-      "${CMAKE_CURRENT_SOURCE_DIR}/cache/buildwin/zlib1.dll"
-    )
+      if (x86) 
+          file(GLOB libarchivedll_files
+          "${CMAKE_CURRENT_SOURCE_DIR}/cache/buildwin/archive.dll"
+          "${CMAKE_CURRENT_SOURCE_DIR}/cache/buildwin/liblzma.dll"
+          "${CMAKE_CURRENT_SOURCE_DIR}/cache/buildwin/zlib1.dll")
+      elseif (x64)
+        file (GLOB libarchivedll_files
+        "${CMAKE_CURRENT_SOURCE_DIR}/cache/buildwin/archive.dll"
+        "${CMAKE_CURRENT_SOURCE_DIR}/cache/buildwin/liblzma.dll"
+        "${CMAKE_CURRENT_SOURCE_DIR}/cache/buildwin/z.dll"
+        "${CMAKE_CURRENT_SOURCE_DIR}/cache/buildwin/bz2.dll"
+        "${CMAKE_CURRENT_SOURCE_DIR}/cache/buildwin/lz4.dll"
+        "${CMAKE_CURRENT_SOURCE_DIR}/cache/buildwin/zstd.dll")
+      endif()
     install(FILES ${libarchivedll_files} DESTINATION ".")
     message(STATUS "LibArchive DLLs bundled into the installer package...")
   endif ()
@@ -2464,6 +2477,29 @@ if (MSVC AND OCPN_USE_GL)
   install(FILES ${CMAKE_SOURCE_DIR}/cache/buildwin/glew32.dll
           DESTINATION ${PREFIX_PKGDATA}
   )
+endif ()
+
+# Install PortAudio
+if (MSVC AND OCPN_USE_PORTAUDIO)
+  install(FILES ${CMAKE_SOURCE_DIR}/cache/buildwin/portaudio.dll
+          DESTINATION ${PREFIX_PKGDATA})
+  install(FILES ${CMAKE_SOURCE_DIR}/cache/buildwin/sndfile.dll
+          DESTINATION ${PREFIX_PKGDATA})
+  install(FILES ${CMAKE_SOURCE_DIR}/cache/buildwin/vorbisenc.dll
+          DESTINATION ${PREFIX_PKGDATA})
+  install(FILES ${CMAKE_SOURCE_DIR}/cache/buildwin/flac.dll
+          DESTINATION ${PREFIX_PKGDATA})
+  install(FILES ${CMAKE_SOURCE_DIR}/cache/buildwin/opus.dll
+          DESTINATION ${PREFIX_PKGDATA})
+  install(FILES ${CMAKE_SOURCE_DIR}/cache/buildwin/mpg123.dll
+          DESTINATION ${PREFIX_PKGDATA})
+  install(FILES ${CMAKE_SOURCE_DIR}/cache/buildwin/vorbis.dll
+          DESTINATION ${PREFIX_PKGDATA})
+  install(FILES ${CMAKE_SOURCE_DIR}/cache/buildwin/libmp3lame.dll
+          DESTINATION ${PREFIX_PKGDATA})
+  install(FILES ${CMAKE_SOURCE_DIR}/cache/buildwin/ogg.dll
+          DESTINATION ${PREFIX_PKGDATA})
+message(STATUS "Portaudio bundled into the installer package...")
 endif ()
 
 if (NOT SKIP_PLUGINS)

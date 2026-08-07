@@ -109,11 +109,11 @@ static bool openStream(PaStream** stream, int deviceIx,
   }
   return true;
 }
+// win 64 bit fix
 
-/** Dump the complete soundLoader buffer to stream using blocking write. */
 static bool writeSynchronous(int deviceIx,
-                             std::unique_ptr<AbstractSoundLoader>& soundLoader,
-                             PortAudioSound* portAudioSound) {
+  std::unique_ptr<AbstractSoundLoader>& soundLoader,
+  PortAudioSound* portAudioSound) {
   PaStream* stream;
   if (!openStream(&stream, deviceIx, soundLoader, 0, portAudioSound)) {
     return false;
@@ -121,12 +121,12 @@ static bool writeSynchronous(int deviceIx,
   if (!startStream(stream)) {
     return false;
   }
-  unsigned buff[BUFSIZE * soundLoader->GetBytesPerSample()];
+  std::vector<unsigned> buff(BUFSIZE * soundLoader->GetBytesPerSample());
   PaError pe = paNoError;
-  int len = soundLoader->Get(buff, sizeof(buff));
-  for (; len > 0; len = soundLoader->Get(buff, sizeof(buff))) {
+  int len = soundLoader->Get(buff.data(), buff.size() * sizeof(unsigned));
+  for (; len > 0; len = soundLoader->Get(buff.data(), buff.size() * sizeof(unsigned))) {
     len /= soundLoader->GetBytesPerSample();
-    pe = Pa_WriteStream(stream, buff, len);
+    pe = Pa_WriteStream(stream, buff.data(), len);
     if (pe != paNoError) {
       wxLogWarning("PortAudio: Cannot write stream: %s", Pa_GetErrorText(pe));
       break;
@@ -137,7 +137,8 @@ static bool writeSynchronous(int deviceIx,
 }
 
 PortAudioSound::PortAudioSound()
-    : m_sound_loader(SoundLoaderFactory()), m_lock(ATOMIC_FLAG_INIT) {
+    : m_sound_loader(SoundLoaderFactory()) {
+  m_lock.clear();
   if (!getenv("OCPN_DEBUG_ALSA"))
     IgnoreRetval(freopen("/dev/null", "w", stderr));
   m_stream = NULL;
