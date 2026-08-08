@@ -1108,6 +1108,7 @@ target_link_libraries(_opencpn INTERFACE ${PACKAGE_NAME})
 target_include_directories(
   _opencpn BEFORE
   INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/model/include
+            ${CMAKE_CURRENT_SOURCE_DIR}/gui/include
             ${CMAKE_CURRENT_SOURCE_DIR}/include
             ${CMAKE_CURRENT_SOURCE_DIR}/resources
             ${CMAKE_CURRENT_SOURCE_DIR}/gui/src/mbtiles
@@ -1520,6 +1521,9 @@ endif ()
 
 # Add android and windows extra, bundled GL headers
 target_link_libraries(${PACKAGE_NAME} PUBLIC ocpn::gl-headers)
+
+add_subdirectory(libs/nlohmann-json)
+target_link_libraries(${PACKAGE_NAME} PUBLIC nlohmann::json)
 
 # Ensure we have ghc::filesystem if std::filesystem is missing.
 add_subdirectory(libs/std_filesystem)
